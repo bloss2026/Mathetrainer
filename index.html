@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2563eb">
+  
+  <!-- PWA & iOS Support -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mathe 9">
+
+  <title>Mathe-Trainer 9. Klasse</title>
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- SystemJS für React im Browser -->
+  <script src="https://unpkg.com/systemjs@0.21.6/dist/system.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="./config.js"></script>
+
+  <!-- PWA Service Worker registrieren -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('PWA Service Worker aktiv:', reg.scope))
+          .catch((err) => console.error('Service Worker Fehler:', err));
+      });
+    }
+  </script>
+</body>
+</html>
