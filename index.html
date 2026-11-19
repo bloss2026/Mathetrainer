@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#2563eb">
-  
+
   <!-- PWA & iOS Support -->
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="./icon-192.png">
@@ -15,13 +15,11 @@
 
   <title>Mathe-Trainer 9. Klasse</title>
   <link rel="stylesheet" href="./style.css">
-
-  <!-- SystemJS für React im Browser -->
-  <script src="https://unpkg.com/systemjs@0.21.6/dist/system.js"></script>
 </head>
 <body>
   <div id="root"></div>
-  <script src="./config.js"></script>
+
+  <script type="module" src="./app.js"></script>
 
   <!-- PWA Service Worker registrieren -->
   <script>

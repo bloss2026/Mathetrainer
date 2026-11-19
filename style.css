@@ -2,7 +2,6 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  /* Verhindert unabsichtliches Markieren von Text beim schnellen Tippen/Touchen */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -11,7 +10,6 @@ body {
   background: #f1f5f9;
   color: #1e293b;
   min-height: 100vh;
-  /* Auf Mobilgeräten oben weniger Rand, volle Breite nutzen */
   padding: 12px 8px;
 }
 
@@ -71,7 +69,6 @@ body {
   cursor: pointer;
 }
 
-/* Scrollbare Themen-Leiste für kleine Bildschirme */
 .category-tabs {
   display: flex;
   flex-wrap: nowrap;
@@ -83,7 +80,7 @@ body {
 }
 
 .category-tabs::-webkit-scrollbar {
-  display: none; /* Scrollbar verstecken für sauberen Look auf Touchscreens */
+  display: none;
 }
 
 .tab-btn {
@@ -157,7 +154,6 @@ body {
   }
 }
 
-/* Echte mathematische Bruch-Darstellung (für Touch optimiert) */
 .math-text {
   display: inline;
   line-height: 2;
@@ -211,7 +207,7 @@ body {
 }
 
 .mc-item {
-  padding: 14px 16px; /* Größere Touch-Fläche für Finger */
+  padding: 14px 16px;
   border: 2px solid #e2e8f0;
   border-radius: 10px;
   cursor: pointer;
@@ -252,8 +248,7 @@ body {
 .text-input {
   width: 100%;
   padding: 14px;
-  /* Verhindert automatisches heranzoomen auf iPhones (Schriftgröße mind. 16px) */
-  font-size: 16px; 
+  font-size: 16px;
   border: 2px solid #cbd5e1;
   border-radius: 10px;
   outline: none;
@@ -298,7 +293,6 @@ body {
   font-size: 0.88rem;
 }
 
-/* Buttons auf Mobilgeräten untereinander oder vollbreit anordnen */
 .actions {
   display: flex;
   flex-direction: column;
@@ -314,7 +308,7 @@ body {
 
 .btn {
   width: 100%;
-  padding: 14px; /* Angenehme Höhe für Daumenbedienung */
+  padding: 14px;
   border: none;
   border-radius: 10px;
   font-size: 1rem;

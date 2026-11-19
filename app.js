@@ -1,8 +1,4 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { staticExercises, generateRandomExercises } from './data/mathe.js';
-
-const { useState, useEffect } = React;
+import { generateSingleTask } from './mathe.js';
 
 const CATEGORIES = [
   'Alle Themen',
@@ -10,251 +6,379 @@ const CATEGORIES = [
   'Terme',
   'Brüche',
   'Potenzen & Wurzeln',
-  'Flächen & Volumen'
+  'Flächen & Volumen',
+  'Prozent & Zinsen',
+  'Lineare Funktionen',
+  'Pythagoras',
+  'Wahrscheinlichkeit'
 ];
 
-// Komponente zur echten Darstellung von Brüchen (Zähler über Nenner)
-function MathText({ text }) {
-  if (!text) return null;
+const STATS_KEY = 'mathe9-stats';
+
+let state = {
+  selectedCategory: 'Alle Themen',
+  currentTask: generateSingleTask('Alle Themen'),
+  userInput: '',
+  selectedOption: null,
+  isEvaluated: false,
+  isCorrect: false,
+  stats: loadStats()
+};
+
+function loadStats() {
+  try {
+    return JSON.parse(localStorage.getItem(STATS_KEY)) || { solved: 0, correct: 0 };
+  } catch (e) {
+    return { solved: 0, correct: 0 };
+  }
+}
+
+function saveStats(stats) {
+  try {
+    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+  } catch (e) {
+    // Storage-Fehler ignorieren
+  }
+}
+
+function normalize(val) {
+  return String(val).trim().toLowerCase().replace(',', '.').replace(/\s+/g, '');
+}
+
+/**
+ * Erzeugt ein DocumentFragment mit formatierten Brüchen und Text.
+ */
+function createMathFragment(text) {
+  const frag = document.createDocumentFragment();
+  if (!text) return frag;
+
+  const wrapper = document.createElement('span');
+  wrapper.className = 'math-text';
 
   const parts = String(text).split(/(-?\d+[a-zA-Z]*\/\d+[a-zA-Z]*)/g);
+  for (const part of parts) {
+    if (!part) continue;
+    const match = part.match(/^(-?)(\d+[a-zA-Z]*)\/(\d+[a-zA-Z]*)$/);
+    if (match) {
+      const [, sign, numerator, denominator] = match;
+      if (sign) {
+        const signEl = document.createElement('span');
+        signEl.className = 'frac-sign';
+        signEl.textContent = sign;
+        wrapper.appendChild(signEl);
+      }
+      const fracEl = document.createElement('span');
+      fracEl.className = 'fraction';
 
-  return (
-    <span className="math-text">
-      {parts.map((part, index) => {
-        const match = part.match(/^(-?)(\d+[a-zA-Z]*)\/(\d+[a-zA-Z]*)$/);
-        if (match) {
-          const [, sign, numerator, denominator] = match;
-          return (
-            <React.Fragment key={index}>
-              {sign && <span className="frac-sign">{sign}</span>}
-              <span className="fraction">
-                <span className="frac-num">{numerator}</span>
-                <span className="frac-den">{denominator}</span>
-              </span>
-            </React.Fragment>
-          );
+      const numEl = document.createElement('span');
+      numEl.className = 'frac-num';
+      numEl.textContent = numerator;
+
+      const denEl = document.createElement('span');
+      denEl.className = 'frac-den';
+      denEl.textContent = denominator;
+
+      fracEl.appendChild(numEl);
+      fracEl.appendChild(denEl);
+      wrapper.appendChild(fracEl);
+    } else {
+      wrapper.appendChild(document.createTextNode(part));
+    }
+  }
+
+  frag.appendChild(wrapper);
+  return frag;
+}
+
+function resetQuestionState() {
+  state.userInput = '';
+  state.selectedOption = null;
+  state.isEvaluated = false;
+  state.isCorrect = false;
+}
+
+function handleCategoryChange(cat) {
+  state.selectedCategory = cat;
+  resetQuestionState();
+  state.currentTask = generateSingleTask(cat);
+  render();
+}
+
+function handleNextTask() {
+  resetQuestionState();
+  state.currentTask = generateSingleTask(state.selectedCategory);
+  render();
+}
+
+function handleResetStats() {
+  state.stats = { solved: 0, correct: 0 };
+  saveStats(state.stats);
+  render();
+}
+
+function checkAnswer(e) {
+  if (e) e.preventDefault();
+  const task = state.currentTask;
+  if (state.isEvaluated || !task) return;
+
+  let correctFlag = false;
+  if (task.type === 'multiple-choice') {
+    if (state.selectedOption === null) return;
+    correctFlag = state.selectedOption === task.correct;
+  } else {
+    if (!state.userInput.trim()) return;
+    correctFlag = normalize(state.userInput) === normalize(task.answer);
+  }
+
+  state.isCorrect = correctFlag;
+  state.isEvaluated = true;
+  state.stats = {
+    solved: state.stats.solved + 1,
+    correct: state.stats.correct + (correctFlag ? 1 : 0)
+  };
+  saveStats(state.stats);
+  render();
+}
+
+function render() {
+  const root = document.getElementById('root');
+  if (!root) return;
+
+  const activeInput = document.activeElement;
+  const hadInputFocus = activeInput && activeInput.classList.contains('text-input');
+  const selectionStart = hadInputFocus ? activeInput.selectionStart : null;
+  const selectionEnd = hadInputFocus ? activeInput.selectionEnd : null;
+
+  const quote = state.stats.solved > 0
+    ? Math.round((state.stats.correct / state.stats.solved) * 100)
+    : 0;
+
+  const container = document.createElement('div');
+  container.className = 'container';
+
+  // --- Header ---
+  const header = document.createElement('header');
+  header.className = 'top-bar';
+
+  const titleWrap = document.createElement('div');
+  const h1 = document.createElement('h1');
+  h1.textContent = 'Mathe-Trainer 9. Klasse';
+  const subtitle = document.createElement('p');
+  subtitle.className = 'subtitle';
+  subtitle.textContent = 'Echter Live-Zufallsgenerator';
+  titleWrap.appendChild(h1);
+  titleWrap.appendChild(subtitle);
+
+  const statsBox = document.createElement('div');
+  statsBox.className = 'stats-box';
+
+  const solvedSpan = document.createElement('span');
+  solvedSpan.innerHTML = `Gelöst: <strong>${state.stats.solved}</strong>`;
+
+  const correctSpan = document.createElement('span');
+  correctSpan.innerHTML = `Richtig: <strong>${state.stats.correct} (${quote}%)</strong>`;
+
+  const resetBtn = document.createElement('button');
+  resetBtn.type = 'button';
+  resetBtn.className = 'btn-small';
+  resetBtn.title = 'Statistik zurücksetzen';
+  resetBtn.textContent = '↺';
+  resetBtn.addEventListener('click', handleResetStats);
+
+  statsBox.appendChild(solvedSpan);
+  statsBox.appendChild(correctSpan);
+  statsBox.appendChild(resetBtn);
+
+  header.appendChild(titleWrap);
+  header.appendChild(statsBox);
+  container.appendChild(header);
+
+  // --- Kategorie-Tabs ---
+  const nav = document.createElement('nav');
+  nav.className = 'category-tabs';
+
+  for (const cat of CATEGORIES) {
+    const tabBtn = document.createElement('button');
+    tabBtn.type = 'button';
+    tabBtn.className = `tab-btn ${state.selectedCategory === cat ? 'active' : ''}`;
+    tabBtn.textContent = cat;
+    tabBtn.addEventListener('click', () => handleCategoryChange(cat));
+    nav.appendChild(tabBtn);
+  }
+  container.appendChild(nav);
+
+  // --- Aufgaben-Karte ---
+  const task = state.currentTask;
+  if (task) {
+    const main = document.createElement('main');
+    main.className = 'card';
+
+    const meta = document.createElement('div');
+    meta.className = 'card-meta';
+
+    const badge = document.createElement('span');
+    badge.className = 'badge';
+    badge.textContent = task.category;
+
+    const counter = document.createElement('span');
+    counter.className = 'counter';
+    counter.textContent = `Aufgabe #${state.stats.solved + (state.isEvaluated ? 0 : 1)}`;
+
+    meta.appendChild(badge);
+    meta.appendChild(counter);
+    main.appendChild(meta);
+
+    const questionEl = document.createElement('h2');
+    questionEl.className = 'question';
+    questionEl.appendChild(createMathFragment(task.question));
+    main.appendChild(questionEl);
+
+    const form = document.createElement('form');
+    form.addEventListener('submit', checkAnswer);
+
+    if (task.type === 'multiple-choice') {
+      const ul = document.createElement('ul');
+      ul.className = 'mc-list';
+
+      task.options.forEach((opt, idx) => {
+        let stateClass = '';
+        if (state.isEvaluated) {
+          if (idx === task.correct) stateClass = 'correct';
+          else if (idx === state.selectedOption) stateClass = 'wrong';
+        } else if (idx === state.selectedOption) {
+          stateClass = 'selected';
         }
-        return <React.Fragment key={index}>{part}</React.Fragment>;
-      })}
-    </span>
-  );
+
+        const li = document.createElement('li');
+        li.className = `mc-item ${stateClass}`;
+        li.appendChild(createMathFragment(opt));
+
+        if (!state.isEvaluated) {
+          li.addEventListener('click', () => {
+            state.selectedOption = idx;
+            render();
+          });
+        }
+
+        ul.appendChild(li);
+      });
+
+      form.appendChild(ul);
+    } else {
+      const inputGroup = document.createElement('div');
+      inputGroup.className = 'input-group';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = `text-input ${
+        state.isEvaluated ? (state.isCorrect ? 'input-correct' : 'input-wrong') : ''
+      }`;
+      input.placeholder = 'Deine Antwort eingeben...';
+      input.value = state.userInput;
+      input.disabled = state.isEvaluated;
+      input.addEventListener('input', (e) => {
+        state.userInput = e.target.value;
+        updateFractionPreview(inputGroup, state.userInput);
+        updateSubmitButtonState(form);
+      });
+
+      inputGroup.appendChild(input);
+      updateFractionPreview(inputGroup, state.userInput);
+      form.appendChild(inputGroup);
+    }
+
+    // --- Feedback ---
+    if (state.isEvaluated) {
+      const fb = document.createElement('div');
+      fb.className = `feedback ${state.isCorrect ? 'fb-success' : 'fb-error'}`;
+
+      const strong = document.createElement('strong');
+      strong.textContent = state.isCorrect ? '✅ Richtig!' : '❌ Leider falsch.';
+      fb.appendChild(strong);
+
+      if (!state.isCorrect && task.type === 'input') {
+        const solP = document.createElement('p');
+        solP.appendChild(document.createTextNode('Richtige Lösung: '));
+        const solStrong = document.createElement('strong');
+        solStrong.appendChild(createMathFragment(task.answer));
+        solP.appendChild(solStrong);
+        fb.appendChild(solP);
+      }
+
+      const expP = document.createElement('p');
+      expP.className = 'explanation';
+      expP.appendChild(createMathFragment(task.explanation));
+      fb.appendChild(expP);
+
+      form.appendChild(fb);
+    }
+
+    // --- Aktions-Buttons ---
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    if (!state.isEvaluated) {
+      const submitBtn = document.createElement('button');
+      submitBtn.type = 'submit';
+      submitBtn.className = 'btn btn-primary';
+      submitBtn.textContent = 'Antwort prüfen';
+      submitBtn.disabled = task.type === 'multiple-choice'
+        ? state.selectedOption === null
+        : !state.userInput.trim();
+
+      const skipBtn = document.createElement('button');
+      skipBtn.type = 'button';
+      skipBtn.className = 'btn btn-secondary';
+      skipBtn.textContent = 'Überspringen ↻';
+      skipBtn.addEventListener('click', handleNextTask);
+
+      actions.appendChild(submitBtn);
+      actions.appendChild(skipBtn);
+    } else {
+      const nextBtn = document.createElement('button');
+      nextBtn.type = 'button';
+      nextBtn.className = 'btn btn-success';
+      nextBtn.textContent = 'Nächste Aufgabe →';
+      nextBtn.addEventListener('click', handleNextTask);
+
+      actions.appendChild(nextBtn);
+    }
+
+    form.appendChild(actions);
+    main.appendChild(form);
+    container.appendChild(main);
+  }
+
+  root.replaceChildren(container);
+
+  // Fokus bei Texteingaben sauber erhalten
+  const newInput = root.querySelector('.text-input');
+  if (newInput && !newInput.disabled && (hadInputFocus || !state.isEvaluated)) {
+    newInput.focus();
+    if (hadInputFocus && selectionStart !== null && selectionEnd !== null) {
+      newInput.setSelectionRange(selectionStart, selectionEnd);
+    }
+  }
 }
 
-function MatheTrainerApp() {
-  const [selectedCategory, setSelectedCategory] = useState('Alle Themen');
-  const [exercises, setExercises] = useState(() => [
-    ...staticExercises,
-    ...generateRandomExercises(10)
-  ]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [userInput, setUserInput] = useState('');
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [isEvaluated, setIsEvaluated] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
+function updateFractionPreview(inputGroup, currentVal) {
+  const existing = inputGroup.querySelector('.fraction-preview');
+  if (existing) existing.remove();
 
-  const [stats, setStats] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('mathe9-stats')) || { solved: 0, correct: 0 };
-    } catch (e) {
-      return { solved: 0, correct: 0 };
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem('mathe9-stats', JSON.stringify(stats));
-  }, [stats]);
-
-  const filteredTasks = selectedCategory === 'Alle Themen'
-    ? exercises
-    : exercises.filter(ex => ex.category === selectedCategory);
-
-  const currentTask = filteredTasks[currentIndex] || filteredTasks[0];
-
-  function handleCategoryChange(cat) {
-    setSelectedCategory(cat);
-    setCurrentIndex(0);
-    resetQuestionState();
+  if (currentVal && currentVal.includes('/')) {
+    const preview = document.createElement('div');
+    preview.className = 'fraction-preview';
+    preview.appendChild(document.createTextNode('Vorschau: '));
+    preview.appendChild(createMathFragment(currentVal));
+    inputGroup.appendChild(preview);
   }
-
-  function resetQuestionState() {
-    setUserInput('');
-    setSelectedOption(null);
-    setIsEvaluated(false);
-    setIsCorrect(false);
-  }
-
-  function normalize(val) {
-    return String(val)
-      .trim()
-      .toLowerCase()
-      .replace('.', ',')
-      .replace(/\s+/g, '');
-  }
-
-  function checkAnswer(e) {
-    if (e) e.preventDefault();
-    if (isEvaluated || !currentTask) return;
-
-    let correctFlag = false;
-
-    if (currentTask.type === 'multiple-choice') {
-      if (selectedOption === null) return;
-      correctFlag = selectedOption === currentTask.correct;
-    } else {
-      if (!userInput.trim()) return;
-      correctFlag = normalize(userInput) === normalize(currentTask.answer);
-    }
-
-    setIsCorrect(correctFlag);
-    setIsEvaluated(true);
-    setStats(prev => ({
-      solved: prev.solved + 1,
-      correct: prev.correct + (correctFlag ? 1 : 0)
-    }));
-  }
-
-  function nextTask() {
-    resetQuestionState();
-    if (currentIndex < filteredTasks.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-    } else {
-      const moreTasks = generateRandomExercises(10);
-      setExercises(prev => [...prev, ...moreTasks]);
-      setCurrentIndex(prev => prev + 1);
-    }
-  }
-
-  function generateNewBatch() {
-    const fresh = [...staticExercises, ...generateRandomExercises(15)];
-    setExercises(fresh);
-    setCurrentIndex(0);
-    resetQuestionState();
-  }
-
-  function resetStats() {
-    setStats({ solved: 0, correct: 0 });
-  }
-
-  const quote = stats.solved > 0 ? Math.round((stats.correct / stats.solved) * 100) : 0;
-
-  return (
-    <div className="container">
-      <header className="top-bar">
-        <div>
-          <h1>Mathe-Trainer 9. Klasse</h1>
-          <p className="subtitle">Interaktives Training mit Endlos-Generator</p>
-        </div>
-        <div className="stats-box">
-          <span>Gelöst: <strong>{stats.solved}</strong></span>
-          <span>Richtig: <strong>{stats.correct} ({quote}%)</strong></span>
-          <button className="btn-small" onClick={resetStats} title="Statistik zurücksetzen">↺</button>
-        </div>
-      </header>
-
-      <nav className="category-tabs">
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat}
-            className={`tab-btn ${selectedCategory === cat ? 'active' : ''}`}
-            onClick={() => handleCategoryChange(cat)}
-          >
-            {cat}
-          </button>
-        ))}
-      </nav>
-
-      {currentTask ? (
-        <main className="card">
-          <div className="card-meta">
-            <span className="badge">{currentTask.category}</span>
-            <span className="counter">Aufgabe {currentIndex + 1} von {filteredTasks.length}</span>
-          </div>
-
-          <h2 className="question">
-            <MathText text={currentTask.question} />
-          </h2>
-
-          <form onSubmit={checkAnswer}>
-            {currentTask.type === 'multiple-choice' ? (
-              <ul className="mc-list">
-                {currentTask.options.map((opt, idx) => {
-                  let stateClass = '';
-                  if (isEvaluated) {
-                    if (idx === currentTask.correct) stateClass = 'correct';
-                    else if (idx === selectedOption) stateClass = 'wrong';
-                  } else if (idx === selectedOption) {
-                    stateClass = 'selected';
-                  }
-
-                  return (
-                    <li
-                      key={idx}
-                      className={`mc-item ${stateClass}`}
-                      onClick={() => !isEvaluated && setSelectedOption(idx)}
-                    >
-                      <MathText text={opt} />
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <div className="input-group">
-                <input
-                  type="text"
-                  className={`text-input ${isEvaluated ? (isCorrect ? 'input-correct' : 'input-wrong') : ''}`}
-                  placeholder="Deine Antwort eingeben (z. B. 3/4 oder 12)..."
-                  value={userInput}
-                  disabled={isEvaluated}
-                  onChange={e => setUserInput(e.target.value)}
-                  autoFocus
-                />
-                {userInput.includes('/') && (
-                  <div className="fraction-preview">
-                    Vorschau: <MathText text={userInput} />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {isEvaluated && (
-              <div className={`feedback ${isCorrect ? 'fb-success' : 'fb-error'}`}>
-                <strong>{isCorrect ? '✅ Richtig!' : '❌ Leider falsch.'}</strong>
-                {!isCorrect && currentTask.type === 'input' && (
-                  <p>Richtige Lösung: <strong><MathText text={currentTask.answer} /></strong></p>
-                )}
-                <p className="explanation">
-                  <MathText text={currentTask.explanation} />
-                </p>
-              </div>
-            )}
-
-            <div className="actions">
-              {!isEvaluated ? (
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={currentTask.type === 'multiple-choice' ? selectedOption === null : !userInput.trim()}
-                >
-                  Antwort prüfen
-                </button>
-              ) : (
-                <button type="button" className="btn btn-success" onClick={nextTask}>
-                  Nächste Aufgabe →
-                </button>
-              )}
-
-              <button type="button" className="btn btn-secondary" onClick={generateNewBatch}>
-                🎲 Neue Zufallsaufgaben
-              </button>
-            </div>
-          </form>
-        </main>
-      ) : (
-        <div className="card">Keine Aufgaben in dieser Kategorie gefunden.</div>
-      )}
-    </div>
-  );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<MatheTrainerApp />);
+function updateSubmitButtonState(form) {
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn && state.currentTask?.type === 'input') {
+    submitBtn.disabled = !state.userInput.trim();
+  }
+}
+
+render();
