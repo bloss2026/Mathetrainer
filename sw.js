@@ -1,11 +1,11 @@
-const CACHE_NAME = 'mathe-trainer-v3';
+const CACHE_NAME = 'mathe-trainer-v6';
 
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './style.css',
   './app.js',
-  './data/mathe.js',
+  './mathe.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
