@@ -9,8 +9,7 @@ const CATEGORIES = [
   'Flächen & Volumen',
   'Prozent & Zinsen',
   'Lineare Funktionen',
-  'Pythagoras',
-  'Wahrscheinlichkeit'
+  'Pythagoras'
 ];
 
 const TOPICS_ONLY = CATEGORIES.filter((c) => c !== 'Alle Themen');
@@ -54,12 +53,18 @@ function loadStats() {
     const correct = Number(raw.correct) || 0;
     const wrong = typeof raw.wrong === 'number' ? raw.wrong : Math.max(0, solved - correct);
 
+    const mistakes = Array.isArray(raw.mistakes)
+      ? raw.mistakes.filter((mistake) =>
+          TOPICS_ONLY.includes(mistake.category)
+        ).slice(0, 50)
+      : [];
+
     return {
       solved,
       correct,
       wrong,
       byTopic,
-      mistakes: Array.isArray(raw.mistakes) ? raw.mistakes.slice(0, 50) : []
+      mistakes
     };
   } catch (e) {
     return base;

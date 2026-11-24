@@ -14,8 +14,7 @@ const ALL_TOPICS = [
   'Flächen & Volumen',
   'Prozent & Zinsen',
   'Lineare Funktionen',
-  'Pythagoras',
-  'Wahrscheinlichkeit'
+  'Pythagoras'
 ];
 
 export function generateSingleTask(selectedCategory) {
@@ -527,29 +526,5 @@ export function generateSingleTask(selectedCategory) {
     }
   }
 
-  // =========================================================================
-  // 9. WAHRSCHEINLICHKEIT
-  // =========================================================================
-  const rot = rand(2, 6);
-  const blau = rand(2, 6);
-  const gruen = rand(1, 5);
-  const gesamt = rot + blau + gruen;
-  const t = gcd(rot, gesamt);
-  const num = rot / t;
-  const den = gesamt / t;
-  const ans = den === 1 ? String(num) : `${num}/${den}`;
-  const shortenStep = t > 1
-    ? ` Schritt 3 – Bruch kürzen (durch ${t}): ${rot} : ${t} = ${num} und ${gesamt} : ${t} = ${den} → ${ans}.`
-    : ` Schritt 3 – Der Bruch ${rot}/${gesamt} lässt sich nicht weiter kürzen.`;
-
-  return {
-    id, category: 'Wahrscheinlichkeit',
-    question: `In einem Beutel liegen ${rot} rote, ${blau} blaue und ${gruen} grüne Kugeln. Wie groß ist die Wahrscheinlichkeit P(rot)? (Gekürzter Bruch)`,
-    type: 'input',
-    answer: ans,
-    explanation:
-      `Schritt 1 – Gesamtanzahl aller Kugeln bestimmen: ${rot} (rot) + ${blau} (blau) + ${gruen} (grün) = ${gesamt} Kugeln insgesamt. ` +
-      `Schritt 2 – Laplace-Formel anwenden: P(rot) = Anzahl roter Kugeln : Gesamtzahl = ${rot}/${gesamt}.` +
-      shortenStep
-  };
+  throw new Error(`Unbekannte Kategorie: ${category}`);
 }

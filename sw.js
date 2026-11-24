@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mathe-trainer-v6';
+const CACHE_NAME = 'mathe-trainer-v8';
 
 const ASSETS_TO_CACHE = [
   './',

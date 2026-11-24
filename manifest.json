@@ -1,7 +1,7 @@
 {
   "name": "Mathe-Trainer 9. Klasse",
   "short_name": "Mathe 9",
-  "description": "Interaktives Mathematik-Training für Kopfrechnen, Terme, Brüche, Potenzen & Wurzeln, Flächen & Volumen, Prozent & Zinsen, Lineare Funktionen, Pythagoras und Wahrscheinlichkeit.",
+  "description": "Interaktives Mathematik-Training für Kopfrechnen, Terme, Brüche, Potenzen & Wurzeln, Flächen & Volumen, Prozent & Zinsen, Lineare Funktionen und Pythagoras.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

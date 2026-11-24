@@ -57,6 +57,29 @@ body {
   gap: 8px;
 }
 
+@media (max-width: 599px) {
+  .header-controls {
+    width: 100%;
+  }
+
+  .mode-switch {
+    width: 100%;
+  }
+
+  .mode-btn {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 4px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+
+  .stats-box {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
 .mode-switch {
   display: inline-flex;
   background: #e2e8f0;
